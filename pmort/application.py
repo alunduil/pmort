@@ -56,9 +56,8 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
         ret = 0.1
 
         if os.access(os.path.join(self.arguments.cache, "load_threshold"), os.R_OK):
-            threshold = open(os.path.join(self.arguments.cache, "load_threshold"), "r")
-            ret = threshold.readlines()
-            threshold.close()
+            with open(os.path.join(self.arguments.cache, "load_threshold"), "r") as file_:
+                ret = float(file_.readline())
 
         logging.debug("load_threshold:%s", ret)
 
@@ -76,6 +75,7 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
         else:
             self.serial_iteration()
         self.learn()
+        self.schedule()
 
     def serial_iteration(self):
         for plugin in PostMortemPlugins():
@@ -101,31 +101,30 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
             thread = threading.Thread(target = self._single_iteration, name = plugin, args = (self, plugin))
             thread.start()
 
-        if self.arguments.debug:
-            helpers.debug({
-                "threading.active_count()":threading.active_count(),
-                "threading.enumerate()":threading.enumerate(),
-                })
+        logging.debug("Active Thread Count:%s", threading.active_count())
+        logging.debug("Enumerated Threads:%s", threading.enumerate())
 
     def daemonize(self):
 
         context = daemon.DaemonContext(
-                working_directory = '/',
                 umask = 0o002,
                 pidfile = lockfile.FileLock(self.arguments.pidfile),
                 )
+
+        if self.arguments.log_level.lower() == "debug":
+            context.working_directory = os.getcwd()
 
         context.files_preserve = [
                 logging.getLogger().__dict__["handlers"][0].__dict__["stream"],
                 ]
 
-        def stop():
+        def stop(signum, frame):
             pass
 
-        def reinitialize():
+        def reinitialize(signum, frame):
             pass
 
-        def iteration():
+        def iteration(signum, frame):
             return self.iteration()
 
         context.signal_map = {
@@ -140,12 +139,15 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
             logging.info("Scheduling the first run.")
             self.schedule()
             logging.info("Pausing this process to let the handlers take over.")
-            signal.pause()
+            logging.info("Who are we? %s %s", os.getuid(), os.getgid())
 
     def schedule(self):
         load_ratio = os.getloadavg()[0]/self.load_threshold
-        sleep_time = (1.0 - load_ratio)*self.arguments.poll_seconds + load_ratio
-        signal.alarm(sleep_time)
+        sleep_time = max((1.0 - load_ratio)*self.arguments.polling_interval + load_ratio, 1.0)
+        logging.debug("Current Sleep Time:%s", sleep_time)
+        logging.debug("Current Int Sleep Time:%s", int(sleep_time))
+        signal.alarm(int(sleep_time))
+        signal.pause()
 
 class PostMortemOptions(object):
     def __init__(self, name):

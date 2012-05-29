@@ -31,7 +31,7 @@ PostMortemParameters = [
                 ]),
             },
         {   
-            # --pidfile, -p
+            # --pidfile, -P
             "option_strings": ["--pidfile", "-P"],
             "default": "/var/run/pmort.pid",
             "help": "".join([
@@ -80,6 +80,7 @@ PostMortemParameters = [
             # --polling_interval, -p
             "option_strings": ["--polling_interval", "-p"],
             "type": int,
+            "default": 300,
             "metavar": "POLL",
             "help": "".join([
                 "Specifies the number of seconds to wait between ",
