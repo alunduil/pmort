@@ -17,11 +17,12 @@
 # Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import os
+import sys
 
 from pmort.plugins import PostMortemPlugin
 
 class LoadAverages(PostMortemPlugin):
     def log(self, output = sys.stdout):
         """Logs the data for the plugin to the output file."""
-        output.write(",".join(os.getloadavg()))
+        output.write(",".join(( str(load) for load in os.getloadavg() )) + "\n")
 

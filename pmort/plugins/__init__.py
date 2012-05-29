@@ -31,6 +31,12 @@ class PostMortemPlugin(object):
         """Logs the data for the plugin to the output file."""
         raise NotImplementedError
 
+    def __repr__(self):
+        return unicode(self)
+
+    def __unicode__(self):
+        return unicode(self.__class__).rsplit('.')[-1][:-2]
+
 class PostMortemPlugins(object):
     def __init__(self, plugin_directory = None, verbose = False, debug = False):
         self._verbose = verbose
@@ -56,6 +62,11 @@ class PostMortemPlugins(object):
 
             sys.path.append(directory)
 
+            if self._debug:
+                helpers.debug({
+                    "os.listdir(directory)":os.listdir(directory),
+                    })
+
             module_names = list(set([ re.sub(r"\.py.?", "", file_name) for file_name in os.listdir(directory) if not file_name.startswith("_") ]))
 
             if self._debug:
@@ -67,7 +78,15 @@ class PostMortemPlugins(object):
 
             for module in modules:
                 for object_ in [ object_() for name, object_ in inspect.getmembers(module, inspect.isclass) if issubclass(object_, "PostMortemPlugin") ]:
-                    self._commands[object_.__class__] = object_
+                    self._commands[repr(object_)] = object_
+
+        del self._commands["PostMortemPlugin"]
+
+        if self._debug:
+            helpers.debug({
+                "self._commands":self._commands,
+                "self._commands.values()":self._commands.values(),
+                })
 
         self._commands = self._commands.values()
 

@@ -17,7 +17,6 @@
 # Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import argparse
-import datetime
 import sys
 import daemon
 import lockfile
@@ -26,34 +25,26 @@ import pwd
 import grp
 import os
 import threading
+import logging
 
 import pmort.helpers as helpers
 
+from datetime import datetime
+
 from pmort.plugins import PostMortemPlugins
+from pmort.parameters import PostMortemParameters
 
 class PostMortemApplication(object): #pylint: disable-msg=R0903
     def __init__(self):
-        self._debug = False
-        self._verbose = False
-        self._quiet = False
-
         self.arguments = PostMortemOptions(sys.argv[0]).parsed_args
 
-        # If we have debugging turned on we should also have verbose.
-        if self.arguments.debug: 
-            self.arguments.verbose = True
-
-        # If we have verbose we shouldn't be quiet.
-        if self.arguments.verbose: 
-            self.arguments.quiet = False
-
         # Other option handling ...
-        helpers.COLORIZE = self.arguments.color
+        if not self.arguments.log_directory.startswith("-"):
+            logging.basicConfig(filename = os.path.join(self.arguments.log_directory, "pmort.log"), level = getattr(logging, self.arguments.log_level.upper()))
+        else:
+            logging.basicConfig(level = getattr(logging, self.arguments.log_level.upper()))
 
-        if self.arguments.debug:
-            helpers.debug({
-                "self.arguments.daemonize":self.arguments.daemonize,
-                })
+        logging.debug("self.arguments.daemonize:%s", self.arguments.daemonize)
 
         if self.arguments.daemonize:
             self.run = self.daemonize
@@ -69,10 +60,7 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
             ret = threshold.readlines()
             threshold.close()
 
-        if self.arguments.debug:
-            helpers.debug({
-                "ret":ret,
-                })
+        logging.debug("load_threshold:%s", ret)
 
         return ret
 
@@ -83,38 +71,33 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
             file_.close()
 
     def iteration(self):
-        verbosity = {
-                "verbose": self.arguments.verbose,
-                "debug": self.arguments.debug,
-                }
-
         if os.getloadavg()[0] > self.load_threshold:
-            self.parallel_iteration(verbosity)
+            self.parallel_iteration()
         else:
-            self.serial_iteration(verbosity)
+            self.serial_iteration()
         self.learn()
 
-    def serial_iteration(self, verbosity):
-        for plugin in PostMortemPlugins(**verbosity):
-            self._single_iteration()
+    def serial_iteration(self):
+        for plugin in PostMortemPlugins():
+            self._single_iteration(plugin)
 
     def _single_iteration(self, plugin):
-        if self.arguments.output:
-            if self.arguments.output.startswith("-"):
-                output = sys.stdout
-            else:
-                output = open(self.arguments.output, "w")
+        if self.arguments.log_directory.startswith("-"):
+            output = sys.stdout
+            output.write(repr(plugin) + ":")
         else:
             now = datetime.now()
             log_path = os.path.join(self.arguments.log_directory, now.strftime("%Y%m%d%H%M%S"))
             if not os.access(log_path, os.W_OK):
                 os.mkdir(log_path)
-            output = open(os.path.join(log_path, plugin + ".log", "w"))
+            output = open(os.path.join(log_path, repr(plugin) + ".log"), "w")
 
         plugin.log(output = output)
+        output.flush()
+        output.close()
 
-    def parallel_iteration(self, verbosity):
-        for plugin in PostMortemPlugins(**verbosity):
+    def parallel_iteration(self):
+        for plugin in PostMortemPlugins():
             thread = threading.Thread(target = self._single_iteration, name = plugin, args = (self, plugin))
             thread.start()
 
@@ -127,10 +110,14 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
     def daemonize(self):
 
         context = daemon.DaemonContext(
-                working_directory = '/var/log/psmort',
+                working_directory = '/',
                 umask = 0o002,
                 pidfile = lockfile.FileLock(self.arguments.pidfile),
                 )
+
+        context.files_preserve = [
+                logging.getLogger().__dict__["handlers"][0].__dict__["stream"],
+                ]
 
         def stop():
             pass
@@ -148,14 +135,11 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
                 signal.SIGALRM: iteration,
                 }
 
-        if self.arguments.chroot:
-            context.chroot = self.arguments.chroot
-
-        context.uid = pwd.getpwnam(self.arguments.uid).pw_uid
-        context.gid = grp.getgrnam(self.arguments.gid).gr_gid
-
+        logging.info("Starting the daemon ...")
         with context:
+            logging.info("Scheduling the first run.")
             self.schedule()
+            logging.info("Pausing this process to let the handlers take over.")
             signal.pause()
 
     def schedule(self):
@@ -182,99 +166,11 @@ class PostMortemOptions(object):
         self._parser.add_argument("--version", action = "version", 
                 version = "%(prog)s 9999")
 
-        # --verbose, -v
-        help_list = [
-                "Specifies verbose output.",
-                ]
-        self._parser.add_argument("--verbose", "-v", action = "store_true",
-                default = "", help = "".join(help_list))
-
-        # --debug, -D
-        help_list = [
-                "Specifies debugging output.  Implies verbose output.",
-                ]
-        self._parser.add_argument("--debug", "-D", action = "store_true",
-                default = False, help = "".join(help_list))
-
-        # --quiet, -q
-        help_list = [
-                "Specifies quiet output.  This is superceded by verbose ",
-                "output.",
-                ]
-        self._parser.add_argument("--quiet", "-q", action = "store_true",
-                default = False, help = "".join(help_list))
-        
-        # --color=[none,light,dark,auto]
-        help_list = [
-                "Specifies whether output should use color and which type of ",
-                "background to color for (light or dark).  This defaults to ",
-                "auto.",
-                ]
-        self.parser.add_argument("--color", 
-                choices = ["none", "light", "dark", "auto"], default = "auto",
-                help = "".join(help_list))
-
-        # --daemonize, -d
-        help_list = [
-                "Specifies that the application should run as a daemon rather ",
-                "than just one run of each plugin.",
-                ]
-        self.parser.add_argument("--daemonize", "-d", action = "store_true",
-                default = False, help = "".join(help_list))
-
-        # --poll_seconds, -s
-        help_list = [
-                "Specifies the polling period for subsequent runs of the ",
-                "plugged in monitors.  The time, S, specified is assumed to ",
-                "be seconds.",
-                ]
-        self.parser.add_argument("--poll_seconds", "-s", type = int,
-                metavar = "S", help = "".join(help_list))
-
-        # --pidfile, -p
-        help_list = [
-                "Specified the location of the process id file.  Defaults to ",
-                "/var/run/pmort.pid.",
-                ]
-        self.parser.add_argument("--pidfile", "-p", 
-                default = "/var/run/pmort.pid", help = "".join(help_list))
-
-        # --configfile, -c
-        help_list = [
-                "Specifies the location of the configuration file.  Defaults ",
-                "to /etc/pmort/pmort.conf.",
-                ]
-        self.parser.add_argument("--configfile", "-c",
-                default = "/etc/pmort/pmort.conf", help = "".join(help_list))
-
-        # --chroot, -r
-        help_list = [
-                "Specifies a directoy to chroot into after starting.",
-                ]
-        self.parser.add_argument("--chroot", "-r", default = None,
-                help = "".join(help_list))
-
-        # --uid, -u
-        help_list = [
-                "Specifies the username the daemon should run as.",
-                ]
-        self.parser.add_argument("--uid", "-u", default = "pmort",
-                help = "".join(help_list))
-
-        # --gid, -g
-        help_list = [
-                "Specifies the groupname the daemon should run as.",
-                ]
-        self.parser.add_argument("--gid", "-g", default = "pmort",
-                help = "".join(help_list))
-
-        # --cache, -C
-        help_list = [
-                "Specifies an alternative directory to learn items into.  ",
-                "Defaults to /var/cache/pmort.",
-                ]
-        self.parser.add_argument("--cache", "-C", default = "/var/cache/pmort",
-                help = "".join(help_list))
+        for parameter in PostMortemParameters:
+            option_strings = parameter["option_strings"]
+            del parameter["option_strings"]
+            self.parser.add_argument(*option_strings, **parameter)
+            parameter["option_strings"] = option_strings
 
         return self._parser
 
