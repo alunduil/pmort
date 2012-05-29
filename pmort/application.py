@@ -25,8 +25,11 @@ import signal
 import pwd
 import grp
 import os
+import threading
 
 import pmort.helpers as helpers
+
+from pmort.plugins import PostMortemPlugins
 
 class PostMortemApplication(object): #pylint: disable-msg=R0903
     def __init__(self):
@@ -57,24 +60,58 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
         else:
             self.run = self.iteration
 
+    @property
+    def load_threshold(self):
+        ret = 0.1
+
+        if os.access(os.path.join(self.arguments.cache, "load_threshold"), os.R_OK):
+            threshold = open(os.path.join(self.arguments.cache, "load_threshold"), "r")
+            ret = threshold.readlines()
+            threshold.close()
+
+        if self.arguments.debug:
+            helpers.debug({
+                "ret":ret,
+                })
+
+        return ret
+
+    def learn(self):
+        if os.getloadavg()[0] > self.load_threshold:
+            file_ = open(os.path.join(self.arguments.cache, "load_threshold"), "w")
+            file_.write(unicode(os.getloadavg()[0]))
+            file_.close()
+
     def iteration(self):
         verbosity = {
                 "verbose": self.arguments.verbose,
                 "debug": self.arguments.debug,
                 }
 
-        if os.getloadavg()[1] > self.load_threshold:
+        if os.getloadavg()[0] > self.load_threshold:
             self.parallel_iteration(verbosity)
         else:
             self.serial_iteration(verbosity)
+        self.learn()
 
     def serial_iteration(self, verbosity):
         for plugin in PostMortemPlugins(**verbosity):
             self._single_iteration()
 
     def _single_iteration(self, plugin):
-        output = plugin.run()
-        self.log(plugin, output)
+        if self.arguments.output:
+            if self.arguments.output.startswith("-"):
+                output = sys.stdout
+            else:
+                output = open(self.arguments.output, "w")
+        else:
+            now = datetime.now()
+            log_path = os.path.join(self.arguments.log_directory, now.strftime("%Y%m%d%H%M%S"))
+            if not os.access(log_path, os.W_OK):
+                os.mkdir(log_path)
+            output = open(os.path.join(log_path, plugin + ".log", "w"))
+
+        plugin.log(output = output)
 
     def parallel_iteration(self, verbosity):
         for plugin in PostMortemPlugins(**verbosity):
@@ -229,6 +266,14 @@ class PostMortemOptions(object):
                 "Specifies the groupname the daemon should run as.",
                 ]
         self.parser.add_argument("--gid", "-g", default = "pmort",
+                help = "".join(help_list))
+
+        # --cache, -C
+        help_list = [
+                "Specifies an alternative directory to learn items into.  ",
+                "Defaults to /var/cache/pmort.",
+                ]
+        self.parser.add_argument("--cache", "-C", default = "/var/cache/pmort",
                 help = "".join(help_list))
 
         return self._parser
