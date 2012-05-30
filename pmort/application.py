@@ -40,18 +40,23 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
         self.arguments = PostMortemArguments("pmort")
 
         if not self.arguments.log_directory.startswith("-"):
-            logging.basicConfig(filename = os.path.join(self.arguments.log_directory, "pmort.log"), level = getattr(logging, self.arguments.log_level.upper()))
+            logging.basicConfig(
+                    filename = os.path.join(self.arguments.log_directory, "pmort.log"), 
+                    level = getattr(logging, self.arguments.log_level.upper())
+                    )
         else:
-            logging.basicConfig(level = getattr(logging, self.arguments.log_level.upper()))
-
-        print [ file_.__dict__["stream"]  for file_ in logging.getLogger().__dict__["handlers"] ]
+            logging.basicConfig(
+                    level = getattr(logging, self.arguments.log_level.upper())
+                    )
 
         logging.debug("self.arguments.daemonize:%s", self.arguments.daemonize)
         logging.debug("self.arguments.configuration:%s", self.arguments.configuration)
 
         if self.arguments.daemonize:
+            logging.info("Daemonizing pmort.")
             self.run = self.daemonize
         else:
+            logging.info("Running only one iteration.")
             self.run = self.iteration
 
     @property
@@ -67,14 +72,18 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
         return ret
 
     def learn(self):
+        logging.info("Learning facts about the system.")
         if os.getloadavg()[0] > self.load_threshold:
+            logging.info("Updating load threshold to %s", os.getloadavg()[0])
             with open(os.path.join(self.arguments.cache, "load_threshold"), "w") as file_:
                 file_.write(unicode(os.getloadavg()[0]))
 
     def iteration(self):
         if os.getloadavg()[0] > self.load_threshold:
+            logging.info("Running a threaded iteration.")
             self.parallel_iteration()
         else:
+            logging.info("Running a serial iteration.")
             self.serial_iteration()
 
         self.learn()
@@ -94,6 +103,8 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
             if not os.access(log_path, os.W_OK):
                 os.mkdir(log_path)
             output = open(os.path.join(log_path, repr(plugin) + ".log"), "w")
+
+        logging.info("Running plugin {0}".format(repr(plugin)))
 
         plugin.log(output = output)
 
@@ -127,6 +138,7 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
                 pidfile = lockfile.FileLock(self.arguments.pidfile),
                 )
 
+        # TODO Remove this.
         if self.arguments.log_level.lower() == "debug":
             context.working_directory = os.getcwd()
 
@@ -136,14 +148,18 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
             ])
 
         def stop(signum, frame):
+            logging.info("Stopping the daemon.")
             context.close()
+            logging.info("Removing the pidfile.")
             os.remove(self.arguments.pidfile)
             sys.exit(0)
 
         def reinitialize(signum, frame):
+            # TODO Do something here.
             pass
 
         def iteration(signum, frame):
+            logging.info("Starting an iteration.")
             return self.iteration()
 
         context.signal_map = {
@@ -155,20 +171,16 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
 
         logging.info("Starting the daemon ...")
         with context:
-            logging.info("Scheduling the first run.")
             with open(self.arguments.pidfile, "w") as pidfile:
+                logging.info("Writing the pidfile.")
                 pidfile.write(unicode(os.getpid()))
+            logging.info("Scheduling the first run.")
             self.schedule()
-            logging.info("Pausing this process to let the handlers take over.")
-            logging.info("Who are we? %s %s", os.getuid(), os.getgid())
 
     def schedule(self):
         load_ratio = os.getloadavg()[0]/self.load_threshold
-        logging.debug("Current load_ratio: %s", load_ratio)
-        logging.debug("Polling Interval: %s", type(self.arguments.polling_interval))
         sleep_time = max((1.0 - load_ratio)*float(self.arguments.polling_interval) + load_ratio, 1.0)
-        logging.debug("Current Sleep Time: %s", sleep_time)
-        logging.debug("Current Int Sleep Time: %s", int(sleep_time))
+        logging.debug("Current Sleep Time: %s", int(sleep_time))
         signal.alarm(int(sleep_time))
         signal.pause()
 
