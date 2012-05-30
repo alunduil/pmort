@@ -24,7 +24,7 @@ from pmort.parameters.configuration import PostMortemConfiguration
 
 class ShellRunner(PostMortemPlugin):
     def log(self, output = sys.stdout):
-        for script, interpreter in ShellScripts(PostMortemConfiguration().shell_directory):
+        for script, interpreter in ShellScripts():
             logging.info("Running Shell Script:  %s %s", interpreter, script)
             if output == sys.stdout:
                 output.write(subprocess.check_output([interpreter, script]))
@@ -40,6 +40,7 @@ class ShellScripts(object):
         directories = [
                 os.path.join(os.path.abspath(os.path.dirname(__file__)), "shell_scripts"),
                 os.path.join(re.sub(r"usr/", "usr/local/", os.path.abspath(os.path.dirname(__file__))), "shell_scripts"),
+                "/etc/pmort/shell_scripts",
                 os.path.expanduser(os.path.join("~", ".config", "pmort", "shell_scripts")),
                 shell_directory,
                 ]
