@@ -33,18 +33,22 @@ from datetime import datetime
 
 from pmort.plugins import PostMortemPlugins
 from pmort.parameters import PostMortemParameters
+from pmort.configuration import PostMortemConfiguration
 
 class PostMortemApplication(object): #pylint: disable-msg=R0903
     def __init__(self):
-        self.arguments = PostMortemOptions(sys.argv[0]).parsed_args
+        self.arguments = PostMortemArguments("pmort")
 
-        # Other option handling ...
+        print self.arguments.log_directory
+        print os.path.join(self.arguments.log_directory, "pmort.log")
+
         if not self.arguments.log_directory.startswith("-"):
             logging.basicConfig(filename = os.path.join(self.arguments.log_directory, "pmort.log"), level = getattr(logging, self.arguments.log_level.upper()))
         else:
             logging.basicConfig(level = getattr(logging, self.arguments.log_level.upper()))
 
         logging.debug("self.arguments.daemonize:%s", self.arguments.daemonize)
+        logging.debug("self.arguments.configuration:%s", self.arguments.configuration)
 
         if self.arguments.daemonize:
             self.run = self.daemonize
@@ -65,15 +69,15 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
 
     def learn(self):
         if os.getloadavg()[0] > self.load_threshold:
-            file_ = open(os.path.join(self.arguments.cache, "load_threshold"), "w")
-            file_.write(unicode(os.getloadavg()[0]))
-            file_.close()
+            with open(os.path.join(self.arguments.cache, "load_threshold"), "w") as file_:
+                file_.write(unicode(os.getloadavg()[0]))
 
     def iteration(self):
         if os.getloadavg()[0] > self.load_threshold:
             self.parallel_iteration()
         else:
             self.serial_iteration()
+
         self.learn()
         self.schedule()
 
@@ -93,6 +97,7 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
             output = open(os.path.join(log_path, repr(plugin) + ".log"), "w")
 
         plugin.log(output = output)
+
         output.flush()
         output.close()
 
@@ -119,17 +124,14 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
                 ]
 
         def stop(signum, frame):
-            pass
-
-        def reinitialize(signum, frame):
-            pass
+            context.close()
 
         def iteration(signum, frame):
             return self.iteration()
 
         context.signal_map = {
                 signal.SIGTERM: stop,
-                signal.SIGHUP: reinitialize,
+                #signal.SIGHUP: reinitialize,
                 signal.SIGINT: 'terminate',
                 signal.SIGALRM: iteration,
                 }
@@ -148,6 +150,20 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
         logging.debug("Current Int Sleep Time:%s", int(sleep_time))
         signal.alarm(int(sleep_time))
         signal.pause()
+
+class PostMortemArguments(object):
+    _arguments = None
+    _configuration = None
+
+    def __init__(self, name):
+        self._arguments = PostMortemOptions(sys.argv[0]).parsed_args
+        self._configuration = PostMortemConfiguration(self._arguments.configuration)
+
+    def __getattr__(self, key):
+        defaults = [ item["default"] for item in PostMortemParameters if "default" in item ]
+        if not getattr(self._arguments, key) in defaults:
+            return getattr(self._arguments, key)
+        return getattr(self._configuration, key)
 
 class PostMortemOptions(object):
     def __init__(self, name):
