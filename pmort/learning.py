@@ -76,8 +76,9 @@ class Learner(object):
         if "file" in self._facts[fact]:
             file_ = self._facts[fact]["file"]
 
-        with open(os.path.join(self._cache, file_), "r") as file_:
-            ret = file_.readline()
+        if os.access(os.path.join(self._cache, file_), os.R_OK):
+            with open(os.path.join(self._cache, file_), "r") as file_:
+                ret = file_.readline()
 
         return ret
 
