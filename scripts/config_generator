@@ -27,9 +27,12 @@ def main():
         "the daemon's execution.  All values provided for parameters are ",
         "default values.",
         ]), 78) ]
+    output.append("")
+    output.append("[DEFAULT]")
+    output.append("")
     for parameter in PostMortemParameters:
         output.extend([ "# " + line for line in textwrap.wrap(parameter["help"], 78) ])
-        output.append("# {0} = {1}".format(parameter["option_strings"][0][2:], parameter["default"]))
+        output.append("#{0} = {1}".format(parameter["option_strings"][0][2:], parameter["default"]))
         output.append("")
     for line in output:
         print line

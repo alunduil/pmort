@@ -18,12 +18,12 @@
 
 import ConfigParser
 
-from pmort.parameters import PostMortemParameters
-
 class PostMortemConfiguration(object):
     _config = None
 
     def __init__(self, configuration):
+        from pmort.parameters import PostMortemParameters
+
         defaults = dict([ (item["option_strings"][0][2:], item["default"]) for item in PostMortemParameters if "default" in item ])
 
         self._config = ConfigParser.SafeConfigParser(defaults)

@@ -16,6 +16,11 @@
 # this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 # Place - Suite 330, Boston, MA  02111-1307, USA.
 
+import sys
+
+from pmort.parameters.options import PostMortemOptions
+from pmort.parameters.configuration import PostMortemConfiguration
+
 PostMortemParameters = [
         {
             # --daemonize, -d
@@ -116,4 +121,18 @@ PostMortemParameters = [
                 ]),
             },
         ]
+
+class PostMortemArguments(object):
+    _arguments = None
+    _configuration = None
+
+    def __init__(self, name):
+        self._arguments = PostMortemOptions(sys.argv[0]).parsed_args
+        self._configuration = PostMortemConfiguration(self._arguments.configuration)
+
+    def __getattr__(self, key):
+        defaults = [ item["default"] for item in PostMortemParameters if "default" in item ]
+        if not getattr(self._arguments, key) in defaults:
+            return getattr(self._arguments, key)
+        return getattr(self._configuration, key)
 
