@@ -42,17 +42,21 @@ setup_params['scripts'] = [
         ]
 setup_params['packages'] = [
         "pmort",
+        "pmort.parameters",
+        "pmort.plugins",
         ]
 setup_params['data_files'] = [
         ("share/doc/%s-%s" % (setup_params['name'], setup_params['version']), [
             "README",
             ]),
+        ("share/doc/%s-%s/config" % (setup_params['name'], setup_params['version']), [
+            "config/pmort.conf",
+            "config/init.sh",
+            "config/logrotate.conf",
+            ]),
 #        ("share/man/man1", [
 #            "doc/man/man1/ssync.1",
 #            ]),
-        ("etc/pmort", [
-            "config/pmort.conf",
-            ]),
         ]
 setup_params['requires'] = [
         ]
