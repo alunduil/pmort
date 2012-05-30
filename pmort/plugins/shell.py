@@ -20,6 +20,7 @@ import sys
 import os
 
 from pmort.plugins import PostMortemPlugin
+from pmort.parameters.configuration import PostMortemConfiguration
 
 class ShellRunner(PostMortemPlugin):
     def log(self, output = sys.stdout):
