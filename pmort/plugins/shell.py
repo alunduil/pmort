@@ -20,6 +20,7 @@ import sys
 import os
 import re
 import logging
+import subprocess
 
 from pmort.plugins import PostMortemPlugin
 from pmort.parameters.configuration import PostMortemConfiguration
