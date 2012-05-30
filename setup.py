@@ -39,7 +39,6 @@ setup_params['url'] = "http://www.alunduil.com/programs/pmort/"
 setup_params['license'] = "GPL-2"
 setup_params['scripts'] = [
         "bin/pmort",
-        "bin/pmortd",
         ]
 setup_params['packages'] = [
         "pmort",
@@ -51,6 +50,9 @@ setup_params['data_files'] = [
 #        ("share/man/man1", [
 #            "doc/man/man1/ssync.1",
 #            ]),
+        ("etc/pmort", [
+            "config/pmort.conf",
+            ]),
         ]
 setup_params['requires'] = [
         ]

@@ -39,13 +39,12 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
     def __init__(self):
         self.arguments = PostMortemArguments("pmort")
 
-        print self.arguments.log_directory
-        print os.path.join(self.arguments.log_directory, "pmort.log")
-
         if not self.arguments.log_directory.startswith("-"):
             logging.basicConfig(filename = os.path.join(self.arguments.log_directory, "pmort.log"), level = getattr(logging, self.arguments.log_level.upper()))
         else:
             logging.basicConfig(level = getattr(logging, self.arguments.log_level.upper()))
+
+        print [ file_.__dict__["stream"]  for file_ in logging.getLogger().__dict__["handlers"] ]
 
         logging.debug("self.arguments.daemonize:%s", self.arguments.daemonize)
         logging.debug("self.arguments.configuration:%s", self.arguments.configuration)
@@ -119,9 +118,10 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
         if self.arguments.log_level.lower() == "debug":
             context.working_directory = os.getcwd()
 
-        context.files_preserve = [
-                logging.getLogger().__dict__["handlers"][0].__dict__["stream"],
-                ]
+        context.files_preserve = []
+        context.files_preserve.extend([ 
+            file_.__dict__["stream"]  for file_ in logging.getLogger().__dict__["handlers"]
+            ])
 
         def stop(signum, frame):
             context.close()
