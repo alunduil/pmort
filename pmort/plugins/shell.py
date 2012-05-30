@@ -56,7 +56,7 @@ class ShellScripts(object):
             for file_name in os.listdir(directory):
                 logging.debug("Checking if %s is a shell script", os.path.join(directory, file_name))
 
-                with open(file_name, "r") as file_:
+                with open(os.path.abspath(os.path.join(directory, file_name)), "r") as file_:
                     shebang = file_.readline()
                     if shebang.startswith("!#"):
                         logging.debug("Found shell script, %s, using interpreter %s", os.path.join(directory, file_name), shebang.strip()[2:])
