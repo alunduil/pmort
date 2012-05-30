@@ -18,6 +18,7 @@
 
 import sys
 import os
+import re
 
 from pmort.plugins import PostMortemPlugin
 from pmort.parameters.configuration import PostMortemConfiguration
