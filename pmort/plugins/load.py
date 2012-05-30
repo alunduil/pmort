@@ -16,13 +16,26 @@
 # this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 # Place - Suite 330, Boston, MA  02111-1307, USA.
 
+"""Load average logging monitor for pmort."""
+
 import os
 import sys
 
 from pmort.plugins import PostMortemPlugin
 
 class LoadAverages(PostMortemPlugin):
+    """The load average monitor for pmort."""
+
     def log(self, output = sys.stdout):
-        """Logs the data for the plugin to the output file."""
+        """Log the current system load average.
+
+        Records the 5, 10, and 15 minute load averages as a comma separated 
+        string into the output file.
+
+        """
+
         output.write(",".join(( str(load) for load in os.getloadavg() )) + "\n")
+
+if __name__ == "__main__":
+    LoadAverages().log()
 

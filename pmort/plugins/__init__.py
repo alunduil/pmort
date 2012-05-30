@@ -16,17 +16,30 @@
 # this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 # Place - Suite 330, Boston, MA  02111-1307, USA.
 
+"""Plugin suite for pmort.
+
+Provides a base plugin that must be inherited to be included in the plugins of
+pmort and a dict-like object to iterate through the plugins that were foudn on
+the system.
+
+"""
+
 import os
 import re
 import sys
-import itertools
 import inspect
-
-from pmort import helpers
+import logging
 
 from pmort.helpers import issubclass
 
 class PostMortemPlugin(object):
+    """Base plugin for all pmort plugins.
+
+    Provides a basic interface for plugins so they can concentrate on getting
+    the data correct rather than book-keeping.
+
+    """
+
     def log(self, output = sys.stdout):
         """Logs the data for the plugin to the output file."""
         raise NotImplementedError
@@ -38,10 +51,14 @@ class PostMortemPlugin(object):
         return unicode(self.__class__).rsplit('.')[-1][:-2]
 
 class PostMortemPlugins(object):
-    def __init__(self, plugin_directory = None, verbose = False, debug = False):
-        self._verbose = verbose
-        self._debug = debug
+    """Collection of found pmort plugins.
 
+    Scours several directories looking for modules that contain subclasses of
+    PostMortemPlugin to include as monitors in pmort.
+
+    """
+
+    def __init__(self, plugin_directory = None):
         self._commands = {}
 
         directories = [
@@ -52,27 +69,18 @@ class PostMortemPlugins(object):
                 ]
 
         for directory in directories:
-            if self._debug:
-                helpers.debug({
-                    "directory":directory,
-                    })
+            logging.debug("Checking for plugins in %s", directory)
 
             if not directory or not os.access(directory, os.R_OK):
                 continue
 
             sys.path.append(directory)
 
-            if self._debug:
-                helpers.debug({
-                    "os.listdir(directory)":os.listdir(directory),
-                    })
+            logging.debug("Files in current directory: %s", os.listdir(directory))
 
             module_names = list(set([ re.sub(r"\.py.?", "", file_name) for file_name in os.listdir(directory) if not file_name.startswith("_") ]))
 
-            if self._debug:
-                helpers.debug({
-                    "module_names":module_names,
-                    })
+            logging.debug("Found possible modules: %s", module_names)
 
             modules = [ __import__(module_name, globals(), locals(), [], -1) for module_name in module_names ]
 
@@ -82,11 +90,7 @@ class PostMortemPlugins(object):
 
         del self._commands["PostMortemPlugin"]
 
-        if self._debug:
-            helpers.debug({
-                "self._commands":self._commands,
-                "self._commands.values()":self._commands.values(),
-                })
+        logging.debug("Found commands: %s", self._commands)
 
         self._commands = self._commands.values()
 
@@ -104,12 +108,6 @@ class PostMortemPlugins(object):
 
     def __iter__(self):
         for command in self._commands:
-
-            if self._debug:
-                helpers.debug({
-                    "command":command,
-                    })
-
             yield command
 
     def __reversed__(self):

@@ -16,10 +16,46 @@
 # this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 # Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import sys
+"""pmort.learning is a self-contained knowledge store for pmort's facts.
+
+This system provides a dict-like object that can be used to update known facts
+or to query for the current value of known facts.
+
+"""
+
 import os
+import logging
 
 class Learner(object):
+    """Knowledge store for pmort's basic facts.
+
+    Given a directory to store knowledge (cache) items in, this small helper
+    simplifies storage and querying of relevant facts.  This simplified API
+    allows the storage mechanism to be changed out at will as well.
+
+    The API provided by this class has only two components:
+      1. Retrieving Facts
+      2. Updating Facts
+
+    This class is stateless (interacting with disk to preserve anything that
+    might be updated on subsequent passes).  This class is not currently thread
+    safe.
+
+    TODO Make this class thread safe.
+
+    This class is idempotent as far as usage goes (it doesn't matter how
+    frequently something is learned) and allows for us to utilize this object
+    in disparate execution locations without worrying about common state.
+
+    Examples:
+
+      * Retrieving Facts
+          Learner(cache_dir)["fact_name"]
+      * Updating Facts
+          Learner(cache_dir).learn()
+
+    """
+
     def __init__(self, cache):
         self._cache = cache
         self._facts = {
@@ -46,13 +82,23 @@ class Learner(object):
         return ret
 
     def learn(self):
-        for name, fact in self._facts:
-            if cmp(fact["value"](), self[fact]) == fact["cmp"]:
-                logging.info("Updating fact, %s, to %s from %s", fact, fact["value"](), self[fact])
+        """Records facts to a persistent state on disk.
 
-                file_ = fact
-                if "file" in self._facts[fact]:
-                    file_ = self._facts[fact]["file"]
+        Records facts into specific files in the cache directory.  Doesn't
+        have any parameters to modify behaviour.  All locations are set
+        relative to the cache directory.  Simply call this method to update
+        pmort's knowledge about relevant facts about the system.
+
+        """
+
+        for name, fact in self._facts.iteritems():
+            if cmp(fact["value"](), self[name]) == fact["cmp"]:
+                logging.info("Updating fact, %s, to %s from %s", fact,
+                        fact["value"](), self[fact])
+
+                file_ = name 
+                if "file" in fact:
+                    file_ = fact["file"]
 
                 with open(os.path.join(self._cache, file_), "w") as file_:
                     file_.write(unicode(fact["value"]()))
