@@ -58,7 +58,8 @@ class ShellScripts(object):
 
                 with open(os.path.abspath(os.path.join(directory, file_name)), "r") as file_:
                     shebang = file_.readline()
-                    if shebang.startswith("!#"):
+                    logging.debug("First line of shell script: %s", shebang)
+                    if shebang.strip().startswith("!#"):
                         logging.debug("Found shell script, %s, using interpreter %s", os.path.join(directory, file_name), shebang.strip()[2:])
                         self._commands[os.path.join(directory, file_name)] = shebang.strip()[2:]
 
