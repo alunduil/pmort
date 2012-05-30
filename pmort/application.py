@@ -110,6 +110,18 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
 
     def daemonize(self):
 
+        if os.access(self.arguments.pidfile, os.R_OK):
+            with open(self.arguments.pidfile, "r") as pidfile:
+                pid = pidfile.readline()
+                if os.path.exists("/proc/{0}".format(pid)):
+                    logging.error("Found already running process with pid {0}".format(pid))
+                    sys.exit(1)
+                else:
+                    logging.info("Breaking the lock file.")
+                    lockfile.LockFile(self.arguments.pidfile).break_lock()
+                    logging.info("Removing the stale pid file.")
+                    os.remove(self.arguments.pidfile)
+
         context = daemon.DaemonContext(
                 umask = 0o002,
                 pidfile = lockfile.FileLock(self.arguments.pidfile),
@@ -125,13 +137,18 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
 
         def stop(signum, frame):
             context.close()
+            os.remove(self.arguments.pidfile)
+            sys.exit(0)
+
+        def reinitialize(signum, frame):
+            pass
 
         def iteration(signum, frame):
             return self.iteration()
 
         context.signal_map = {
                 signal.SIGTERM: stop,
-                #signal.SIGHUP: reinitialize,
+                signal.SIGHUP: reinitialize,
                 signal.SIGINT: 'terminate',
                 signal.SIGALRM: iteration,
                 }
@@ -139,15 +156,19 @@ class PostMortemApplication(object): #pylint: disable-msg=R0903
         logging.info("Starting the daemon ...")
         with context:
             logging.info("Scheduling the first run.")
+            with open(self.arguments.pidfile, "w") as pidfile:
+                pidfile.write(unicode(os.getpid()))
             self.schedule()
             logging.info("Pausing this process to let the handlers take over.")
             logging.info("Who are we? %s %s", os.getuid(), os.getgid())
 
     def schedule(self):
         load_ratio = os.getloadavg()[0]/self.load_threshold
-        sleep_time = max((1.0 - load_ratio)*self.arguments.polling_interval + load_ratio, 1.0)
-        logging.debug("Current Sleep Time:%s", sleep_time)
-        logging.debug("Current Int Sleep Time:%s", int(sleep_time))
+        logging.debug("Current load_ratio: %s", load_ratio)
+        logging.debug("Polling Interval: %s", type(self.arguments.polling_interval))
+        sleep_time = max((1.0 - load_ratio)*float(self.arguments.polling_interval) + load_ratio, 1.0)
+        logging.debug("Current Sleep Time: %s", sleep_time)
+        logging.debug("Current Int Sleep Time: %s", int(sleep_time))
         signal.alarm(int(sleep_time))
         signal.pause()
 

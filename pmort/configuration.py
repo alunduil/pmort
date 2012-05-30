@@ -16,7 +16,6 @@
 # this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 # Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import logging
 import ConfigParser
 
 from pmort.parameters import PostMortemParameters
@@ -27,11 +26,8 @@ class PostMortemConfiguration(object):
     def __init__(self, configuration):
         defaults = dict([ (item["option_strings"][0][2:], item["default"]) for item in PostMortemParameters if "default" in item ])
 
-        logging.debug("Default config values: %s", defaults)
-
         self._config = ConfigParser.SafeConfigParser(defaults)
         self._config.read(configuration)
 
     def __getattr__(self, key):
-        logging.debug("Configuration Key:%s", key)
         return self._config.get("DEFAULT", key, raw = True)
