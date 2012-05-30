@@ -95,7 +95,7 @@ class Learner(object):
         for name, fact in self._facts.iteritems():
             if cmp(fact["value"](), self[name]) == fact["cmp"]:
                 logging.info("Updating fact, %s, to %s from %s", fact,
-                        fact["value"](), self[fact])
+                        fact["value"](), self[name])
 
                 file_ = name 
                 if "file" in fact:
