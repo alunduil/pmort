@@ -93,6 +93,12 @@ class Learner(object):
         """
 
         for name, fact in self._facts.iteritems():
+            logging.debug("Fact: %s", name)
+            logging.debug("Current Value: %s", fact["value"]())
+            logging.debug("Current Fact: %s", self[name])
+            logging.debug("Comparison: %s", cmp(fact["value"](), self[name]))
+            logging.debug("Expected Comparison: %s", fact["cmp"])
+
             if cmp(fact["value"](), self[name]) == fact["cmp"]:
                 logging.info("Updating fact, %s, to %s from %s", name,
                         fact["value"](), self[name])
