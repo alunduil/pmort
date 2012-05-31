@@ -99,7 +99,7 @@ class Learner(object):
             logging.debug("Comparison: %s", cmp(fact["value"](), self[name]))
             logging.debug("Expected Comparison: %s", fact["cmp"])
 
-            if cmp(fact["value"](), self[name]) == fact["cmp"]:
+            if cmp(fact["value"](), float(self[name])) == fact["cmp"]:
                 logging.info("Updating fact, %s, to %s from %s", name,
                         fact["value"](), self[name])
 
