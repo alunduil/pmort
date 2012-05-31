@@ -9,7 +9,7 @@ PIDFILE=/var/run/pmort.pid
 
 start () {
 	ebegin "Starting pmort"
-	start-stop-daemon --start --quiet --exec ${DAEMON} -- -P ${PIDFILE} ${BITLBEE_OPTS}
+	start-stop-daemon --start --quiet --interpreted --pidfile ${PIDFILE} --exec ${DAEMON} -- -P ${PIDFILE} ${BITLBEE_OPTS}
 	eend $?
 }
 

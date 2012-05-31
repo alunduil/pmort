@@ -51,7 +51,7 @@ setup_params['data_files'] = [
             ]),
         ("share/doc/%s-%s/config" % (setup_params['name'], setup_params['version']), [
             "config/pmort.conf",
-            "config/init.sh",
+            "config/init.gentoo",
             "config/logrotate.conf",
             ]),
 #        ("share/man/man1", [
