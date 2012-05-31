@@ -36,7 +36,7 @@ class ShellRunner(PostMortemPlugin):
                     logging.debug("Logging into %s", os.path.join(os.path.abspath(os.path.dirname(output.name)), script.split("/")[-1] + ".log"))
                     with open(os.path.join(os.path.abspath(os.path.dirname(output.name)), script.split("/")[-1] + ".log"), "w") as output:
                         output.write(subprocess.check_output([interpreter, script]))
-            except CalledProcessError as error:
+            except subprocess.CalledProcessError as error:
                 logging.warning("Error in %s: %s", script, error)
 
 class ShellScripts(object):
