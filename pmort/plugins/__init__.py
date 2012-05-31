@@ -82,7 +82,13 @@ class PostMortemPlugins(object):
 
             logging.debug("Found possible modules: %s", module_names)
 
-            modules = [ __import__(module_name, globals(), locals(), [], -1) for module_name in module_names ]
+            modules = []
+            for module_name in module_names:
+                try:
+                    modules.append(__import__(module_name, globals(), locals(), [], -1))
+                except ImportError as error:
+                    logging.warning("%s is not able to be imported as a module.", module_name)
+                    continue
 
             for module in modules:
                 for object_ in [ object_() for name, object_ in inspect.getmembers(module, inspect.isclass) if issubclass(object_, "PostMortemPlugin") ]:
