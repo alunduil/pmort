@@ -45,6 +45,11 @@ setup_params['packages'] = [
         "pmort.parameters",
         "pmort.plugins",
         ]
+setup_params["package_data"] = {
+        "pmort.plugins": [
+            "shell_scripts/*.sh",
+            ],
+        }
 setup_params['data_files'] = [
         ("share/doc/%s-%s" % (setup_params['name'], setup_params['version']), [
             "README",
