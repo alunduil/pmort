@@ -1,0 +1,6 @@
+#!/bin/bash
+
+PMORT_LOG_DIR=/var/log/pmort
+
+find ${PMORT_LOG_DIR} -type d -mindepth 1 -maxdepth 1 -daystart -ctime 1 -execdir rm -rf "{}" \;
+

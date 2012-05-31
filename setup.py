@@ -58,6 +58,7 @@ setup_params['data_files'] = [
             "config/pmort.conf",
             "config/init.gentoo",
             "config/logrotate.conf",
+            "config/pmort.cron",
             ]),
 #        ("share/man/man1", [
 #            "doc/man/man1/ssync.1",
