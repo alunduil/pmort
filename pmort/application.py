@@ -270,7 +270,7 @@ class PostMortemApplication(object):
             target = os.path.join(self.arguments.log_directory, "lastshutdown")
             if os.access(target, os.W_OK):
                 os.remove(target)
-            os.rymlink(
+            os.symlink(
                     os.path.join(self.arguments.log_directory, unicode(self.last_directory)),
                     target
                     )
