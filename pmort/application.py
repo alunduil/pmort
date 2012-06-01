@@ -142,6 +142,10 @@ class PostMortemApplication(object):
             logging.debug("Creating the current symlink")
 
             target = os.path.join(output.name.rsplit('/', 1)[0], "current")
+
+            logging.debug("Target of the symlink: %s", target)
+            logging.debug("Source name: %s", output.name)
+
             if os.access(target, os.W_OK):
                 os.remove(target)
             os.symlink(output.name, target)
