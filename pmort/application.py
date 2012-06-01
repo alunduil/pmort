@@ -189,17 +189,23 @@ class PostMortemApplication(object):
                     logging.error("Found already running process with pid %s", pid)
                     sys.exit(1)
                 else:
-                    target = os.path.join(self.arguments.log_directory, "lastcrash")
-                    if os.access(target, os.W_OK):
-                        os.remove(target)
-                    os.symlink(
-                            os.path.join(self.arguments.log_directory, unicode(self.last_directory)),
-                            target
-                            )
                     logging.warning("Breaking the lock file.")
                     lockfile.LockFile(self.arguments.pidfile).break_lock()
                     logging.warning("Removing the stale pid file.")
                     os.remove(self.arguments.pidfile)
+
+        if os.access(os.path.join(self.arguments.cache, "running"), os.W_OK):
+            target = os.path.join(self.arguments.log_directory, "lastcrash")
+            if os.access(target, os.W_OK):
+                os.remove(target)
+            os.symlink(
+                    os.path.join(self.arguments.log_directory, unicode(self.last_directory)),
+                    target
+                    )
+            os.remove(os.path.join(self.arguments.cache, "running"))
+        else:
+            with open(os.path.join(self.arguments.cache, "running"), "w") as file_:
+                file_.write("")
 
         context = daemon.DaemonContext(
                 umask = 0o002,
@@ -229,6 +235,9 @@ class PostMortemApplication(object):
 
             logging.info("Removing the pidfile.")
             os.remove(self.arguments.pidfile)
+
+            logging.info("Removing the running mark.")
+            os.remove(os.path.join(self.arguments.cache, "running"))
 
             logging.info("Exiting.")
             sys.exit(0)
