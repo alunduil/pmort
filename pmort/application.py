@@ -141,7 +141,7 @@ class PostMortemApplication(object):
         if output != sys.stdout:
             logging.debug("Creating the current symlink")
 
-            target = os.path.join(output.name.rsplit('/', 1)[0], "current")
+            target = os.path.join(output.name.rsplit('/', 2)[0], "current")
 
             logging.debug("Target of the symlink: %s", target)
             logging.debug("Source name: %s", output.name)
