@@ -148,7 +148,7 @@ class PostMortemApplication(object):
 
             if os.access(target, os.W_OK):
                 os.remove(target)
-            os.symlink(output.name, target)
+            os.symlink(output.name.rsplit('/', 1)[0], target)
             output.close()
 
     def parallel_iteration(self):
@@ -186,8 +186,7 @@ class PostMortemApplication(object):
             with open(self.arguments.pidfile, "r") as pidfile:
                 pid = pidfile.readline()
                 if os.path.exists("/proc/{0}".format(pid)):
-                    logging.error("Found already running process with pid %s",
-                            pid)
+                    logging.error("Found already running process with pid %s", pid)
                     sys.exit(1)
                 else:
                     target = os.path.join(self.arguments.log_directory, "lastcrash")
