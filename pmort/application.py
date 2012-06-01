@@ -194,6 +194,10 @@ class PostMortemApplication(object):
                     logging.warning("Removing the stale pid file.")
                     os.remove(self.arguments.pidfile)
 
+        if lockfile.LockFile(self.arguments.pidfile).is_locked():
+            logging.debug("Removing stale pid lock.")
+            os.remove(self.arguments.pidfile + ".lock")
+
         if os.access(os.path.join(self.arguments.cache, "running"), os.W_OK):
             target = os.path.join(self.arguments.log_directory, "lastcrash")
             if os.access(target, os.W_OK):
