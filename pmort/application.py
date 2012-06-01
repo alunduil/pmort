@@ -137,6 +137,7 @@ class PostMortemApplication(object):
 
         output.flush()
         if output != sys.stdout:
+            os.symlink(output.name, os.path.join(output.name.rsplit('/', 1)[0], "current"))
             output.close()
 
     def parallel_iteration(self):
@@ -154,6 +155,11 @@ class PostMortemApplication(object):
 
         logging.debug("Active Thread Count:%s", threading.active_count())
         logging.debug("Enumerated Threads:%s", threading.enumerate())
+
+    @property
+    def last_directory(self):
+        directories = sorted([ int(file_name) for file_name in os.listdir(self.arguments.log_directory) if re.match(r"\d+", file_name) ])
+        return directories[-1]
 
     def daemonize(self):
         """Start the pmort deamon process and schedule the first run.
@@ -173,6 +179,10 @@ class PostMortemApplication(object):
                             pid)
                     sys.exit(1)
                 else:
+                    os.symlink(
+                            os.path.join(self.arguments.log_directory, unicode(self.last_directory)),
+                            os.path.join(self.arguments.log_directory, "lastcrash")
+                            )
                     logging.warning("Breaking the lock file.")
                     lockfile.LockFile(self.arguments.pidfile).break_lock()
                     logging.warning("Removing the stale pid file.")
@@ -247,6 +257,10 @@ class PostMortemApplication(object):
                 logging.info("Writing the pidfile.")
                 pidfile.write(unicode(os.getpid()))
             logging.info("Scheduling the first run.")
+            os.symlink(
+                    os.path.join(self.arguments.log_directory, unicode(self.last_directory)),
+                    os.path.join(self.arguments.log_directory, "lastshutdown")
+                    )
             self.schedule()
 
     def schedule(self):
