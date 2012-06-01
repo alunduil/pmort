@@ -29,15 +29,21 @@ class ShellRunner(PostMortemPlugin):
     def log(self, output = sys.stdout):
         for script, interpreter in ShellScripts():
             logging.info("Running Shell Script:  %s %s", interpreter, script)
+
+            write = ""
+
             try:
-                if output == sys.stdout:
-                    output.write(subprocess.check_output([interpreter, script]))
-                else:
-                    logging.debug("Logging into %s", os.path.join(os.path.abspath(os.path.dirname(output.name)), script.split("/")[-1] + ".log"))
-                    with open(os.path.join(os.path.abspath(os.path.dirname(output.name)), script.split("/")[-1] + ".log"), "w") as output:
-                        output.write(subprocess.check_output([interpreter, script]))
+                write = subprocess.check_output([interpreter, script])
             except subprocess.CalledProcessError as error:
                 logging.warning("Error in %s: %s", script, error)
+                continue
+
+            if output == sys.stdout:
+                output.write(write)
+            else:
+                logging.debug("Logging into %s", os.path.join(os.path.abspath(os.path.dirname(output.name)), script.split("/")[-1] + ".log"))
+                with open(os.path.join(os.path.abspath(os.path.dirname(output.name)), script.split("/")[-1] + ".log"), "w") as output:
+                    output.write(write)
 
 class ShellScripts(object):
     def __init__(self, shell_directory = None):
