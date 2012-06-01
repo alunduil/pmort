@@ -138,7 +138,10 @@ class PostMortemApplication(object):
 
         output.flush()
         if output != sys.stdout:
-            os.symlink(output.name, os.path.join(output.name.rsplit('/', 1)[0], "current"))
+            target = os.path.join(output.name.rsplit('/', 1)[0], "current")
+            if os.access(target, os.W_OK):
+                os.remove(target)
+            os.symlink(output.name, target)
             output.close()
 
     def parallel_iteration(self):
@@ -180,9 +183,12 @@ class PostMortemApplication(object):
                             pid)
                     sys.exit(1)
                 else:
+                    target = os.path.join(self.arguments.log_directory, "lastcrash")
+                    if os.access(target, os.W_OK):
+                        os.remove(target)
                     os.symlink(
                             os.path.join(self.arguments.log_directory, unicode(self.last_directory)),
-                            os.path.join(self.arguments.log_directory, "lastcrash")
+                            target
                             )
                     logging.warning("Breaking the lock file.")
                     lockfile.LockFile(self.arguments.pidfile).break_lock()
@@ -258,9 +264,12 @@ class PostMortemApplication(object):
                 logging.info("Writing the pidfile.")
                 pidfile.write(unicode(os.getpid()))
             logging.info("Scheduling the first run.")
+            target = os.path.join(self.arguments.log_directory, "lastshutdown")
+            if os.access(target, os.W_OK):
+                os.remove(target)
             os.symlink(
                     os.path.join(self.arguments.log_directory, unicode(self.last_directory)),
-                    os.path.join(self.arguments.log_directory, "lastshutdown")
+                    target
                     )
             self.schedule()
 
