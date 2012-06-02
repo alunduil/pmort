@@ -28,7 +28,7 @@ def predict(load = os.getloadavg(), time = -1):
     def parabola(time = time):
         return (L15/140 - L5/40 + L1/56)*time**2 + (4*L5/10 - 5*L1/14 - 3*L15/70)*time + (225*L1/168 + L15/28 - 3*L5/8)
 
-    return parabola(time)/(1/(time - 5)**2 - 5*(parabola(15) - parabola(5))) + parabola(1)
+    return max(parabola(time)/(1/(time - 5)**2 - 5*(parabola(15) - parabola(5))) + parabola(1), 0)
 
 def main():
 
