@@ -19,6 +19,7 @@
 
 import os
 import time
+import numpy
 
 def predict(load = os.getloadavg(), time = -1):
     L1 = load[0]
@@ -41,11 +42,10 @@ def main():
         load = os.getloadavg()
         prediction = predict(load)
 
-        if previous:
+        if previous is not None:
             differences.append(abs(previous - load[0]))
             print("Load: {0}; Prediction: {1:.2f}".format(load[0], previous))
-        if len(differences):
-            print("Current Difference: {0:.2f}; Average Difference: {1:.2f}".format(differences[-1], sum(differences)/len(differences)))
+            print("Current Difference: {0:.2f}; Average Difference: {1:.2f}".format(differences[-1], numpy.average(differences)))
 
         time.sleep(60)
 

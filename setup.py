@@ -1,6 +1,5 @@
 #!/usr/bin/env python -t3
-# -*- coding: utf-8 -*-
-
+#
 # Copyright (C) 2012 by Alex Brandt <alunduil@alunduil.com>
 #
 # This program is free software; you can redistribute it and#or modify it under
@@ -19,56 +18,54 @@
 
 from distutils.core import setup
 
-#from upkern.doc.man import build_manpage
+try:
+    from pmort import information
+except ImportError:
+    sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+    from pmort import information
 
-setup_params = {}
-setup_params['name'] = "pmort"
-setup_params['version'] = "9999"
-setup_params['description'] = "".join([
-    "A daemon that collects information useful for a post-mortem analysis on ",
-    "a server."
-    ])
-setup_params["long_description"] = "".join([
-    "Daemonized system information collection tool for performing post-mortem ",
-    "analysis on various components of the system.  Is pluggable with various ",
-    "scripts that execute to obtain said information.",
-    ])
-setup_params['author'] = "Alex Brandt"
-setup_params['author_email'] = "alunduil@alunduil.com"
-setup_params['url'] = "http://www.alunduil.com/programs/pmort/"
-setup_params['license'] = "GPL-2"
-setup_params['scripts'] = [
+PARAMS = {}
+PARAMS["name"] = information.NAME
+PARAMS["version"] = information.VERSION
+PARAMS["description"] = information.DESCRIPTION
+PARAMS["long_description"] = information.LONG_DESCRIPTION
+PARAMS["author"] = information.AUTHOR
+PARAMS["author_email"] = information.AUTHOR_EMAIL
+PARAMS["url"] = information.URL
+PARAMS["license"] = information.LICENSE
+
+PARAMS["scripts"] = [
         "bin/pmort",
         ]
-setup_params['packages'] = [
+PARAMS["packages"] = [
         "pmort",
-        "pmort.parameters",
         "pmort.plugins",
         ]
-setup_params["package_data"] = {
+PARAMS["package_data"] = {
         "pmort.plugins": [
             "shell_scripts/*.sh",
             ],
         }
-setup_params['data_files'] = [
-        ("share/doc/%s-%s" % (setup_params['name'], setup_params['version']), [
-            "README",
+PARAMS["data_files"] = [
+        ("share/doc/{P[name]}-{P[version]}".format(P = PARAMS), [
+            "README.md",
             ]),
-        ("share/doc/%s-%s/config" % (setup_params['name'], setup_params['version']), [
+        ("share/doc/{P[name]}-{P[version]}/config".format(P = PARAMS), [
             "config/pmort.conf",
             "config/init.gentoo",
             "config/logrotate.conf",
             "config/pmort.cron",
             ]),
-#        ("share/man/man1", [
-#            "doc/man/man1/ssync.1",
-#            ]),
+        ("share/man/man8", [
+            "doc/man/man8/pmort.8",
+            ]),
+        ("share/man/man5", [
+            "doc/man/man5/pmort.conf.5",
+            ]),
         ]
-setup_params['requires'] = [
+
+PARAMS["requires"] = [
+        "daemon",
         ]
-#setup_params['cmdclass'] = {
-#        "build_manpage": build_manpage,
-#        }
 
-setup(**setup_params)
-
+setup(**PARAMS)

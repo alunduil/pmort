@@ -4,18 +4,26 @@
 # later
 # $Header: /var/cvsroot/gentoo-x86/net-im/bitlbee/files/bitlbee.initd,v 1.3 2011/12/04 21:18:10 radhermit Exp $
 
-DAEMON=/usr/bin/pmort
-PIDFILE=/var/run/pmort.pid
+config="${CONFIG:-/etc/pmort/pmort.conf}"
+pidfile="${PIDFILE:-/var/run/pmort.pid}"
 
-start () {
-	ebegin "Starting pmort"
-	start-stop-daemon --start --quiet --interpreted --pidfile ${PIDFILE} --exec ${DAEMON} -- -P ${PIDFILE} ${BITLBEE_OPTS}
+command_args=""
+command_args="${command_args} ${EXTRA_OPTS}"
+
+command="/usr/bin/pmort"
+
+depend() {
+  use logger
+}
+
+start() {
+	ebegin "Starting ${SVCNAME}"
+	start-stop-daemon --start --interpreted --pidfile ${pidfile} ${command} -- ${command_args}
 	eend $?
 }
 
 stop() {
-	ebegin "Stopping pmort"
-	start-stop-daemon --stop --quiet --pidfile ${PIDFILE}
+	ebegin "Stopping ${SVCNAME}"
+	start-stop-daemon --stop --pidfile ${PIDFILE}
 	eend $?
 }
-
