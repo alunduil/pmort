@@ -1,71 +1,110 @@
-#!/usr/bin/env python -t3
+# Copyright (C) 2013 by Alex Brandt <alunduil@alunduil.com>
 #
-# Copyright (C) 2012 by Alex Brandt <alunduil@alunduil.com>
-#
-# This program is free software; you can redistribute it and#or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-# details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc., 59 Temple
-# Place - Suite 330, Boston, MA  02111-1307, USA.
+# pmort is freely distributable under the terms of an MIT-style license.
+# See COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from distutils.core import setup
+# -----------------------------------------------------------------------------
+import sys
+import configparser
+import traceback
 
-try:
-    from pmort import information
-except ImportError:
-    sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-    from pmort import information
+original_sections = sys.modules['configparser'].ConfigParser.sections
+
+def monkey_sections(self):
+    '''Return a list of sections available; DEFAULT is not included in the list.
+
+    Monkey patched to exclude the nosetests section as well.
+
+    '''
+
+    _ = original_sections(self)
+
+    if any([ 'distutils/dist.py' in frame[0] for frame in traceback.extract_stack() ]) and _.count('nosetests'):
+        _.remove('nosetests')
+
+    return _
+
+sys.modules['configparser'].ConfigParser.sections = monkey_sections
+# -----------------------------------------------------------------------------
+
+from ez_setup import use_setuptools
+use_setuptools()
+
+from setuptools import setup
+
+from pmort import information
 
 PARAMS = {}
-PARAMS["name"] = information.NAME
-PARAMS["version"] = information.VERSION
-PARAMS["description"] = information.DESCRIPTION
-PARAMS["long_description"] = information.LONG_DESCRIPTION
-PARAMS["author"] = information.AUTHOR
-PARAMS["author_email"] = information.AUTHOR_EMAIL
-PARAMS["url"] = information.URL
-PARAMS["license"] = information.LICENSE
 
-PARAMS["scripts"] = [
-        "bin/pmort",
+PARAMS['name'] = information.NAME
+PARAMS['version'] = information.VERSION
+PARAMS['description'] = information.DESCRIPTION
+PARAMS['long_description'] = information.LONG_DESCRIPTION
+PARAMS['author'] = information.AUTHOR
+PARAMS['author_email'] = information.AUTHOR_EMAIL
+PARAMS['url'] = information.URL
+PARAMS['license'] = information.LICENSE
+
+PARAMS['classifiers'] = [
+        'Development Status :: 2 - Pre-Alpha',
+        'Environment :: No Input/Output (Daemon)',
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: English',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python :: 3.3',
+        'Topic :: System :: Logging',
         ]
-PARAMS["packages"] = [
-        "pmort",
-        "pmort.plugins",
+
+PARAMS['keywords'] = [
+        'pmort',
+        'post-mortem',
         ]
-PARAMS["package_data"] = {
-        "pmort.plugins": [
-            "shell_scripts/*.sh",
+
+PARAMS['provides'] = [
+        'pmort',
+        ]
+
+with open('requirements.txt', 'r') as req_fh:
+    PARAMS['install_requires'] = req_fh.readlines()
+
+with open('test_pmort/requirements.txt', 'r') as req_fh:
+    PARAMS['tests_require'] = req_fh.readlines()
+
+PARAMS['test_suite'] = 'nose.collector'
+
+PARAMS['entry_points'] = {
+        'console_scripts': [
+            'pmort = pmort:main',
             ],
         }
-PARAMS["data_files"] = [
-        ("share/doc/{P[name]}-{P[version]}".format(P = PARAMS), [
-            "README.md",
-            ]),
-        ("share/doc/{P[name]}-{P[version]}/config".format(P = PARAMS), [
-            "config/pmort.conf",
-            "config/init.gentoo",
-            "config/logrotate.conf",
-            "config/pmort.cron",
-            ]),
-        ("share/man/man8", [
-            "doc/man/man8/pmort.8",
-            ]),
-        ("share/man/man5", [
-            "doc/man/man5/pmort.conf.5",
-            ]),
+
+PARAMS['packages'] = [
+        'pmort',
+        'pmort.plugins',
         ]
 
-PARAMS["requires"] = [
-        "daemon",
+PARAMS['package_data'] = {
+        'pmort.plugins': [
+            'shell_scripts/*.sh',
+            ],
+        }
+
+PARAMS['data_files'] = [
+        ('share/doc/{P[name]}-{P[version]}'.format(P = PARAMS), [
+            'README.rst',
+            ]),
+        ('share/doc/{P[name]}-{P[version]}/conf/cron.daily'.format(P = PARAMS), [
+            'conf/cron.daily/pmort.cron',
+            ]),
+        ('share/doc/{P[name]}-{P[version]}/conf/init.d'.format(P = PARAMS), [
+            'conf/init.d/pmort.gentoo',
+            ]),
+        ('share/doc/{P[name]}-{P[version]}/conf/logrotate.d'.format(P = PARAMS), [
+            'conf/logrotate.d/pmort.conf',
+            ]),
+        ('share/doc/{P[name]}-{P[version]}/conf/pmort'.format(P = PARAMS), [
+            'conf/pmort/pmort.ini',
+            ]),
         ]
 
 setup(**PARAMS)
