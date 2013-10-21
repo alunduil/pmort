@@ -1,0 +1,38 @@
+#!/sbin/runscript
+# Copyright 1999-2013 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License, v2 or
+# later
+# $Header: $
+
+description="pmort—postmortem data provider"
+
+pidfile="/run/pmort.pid"
+
+command="/usr/bin/pmort"
+
+command_args=""
+command_args="${command_args} ${EXTRA_OPTS}"
+
+USER="${USER:-pmort}"
+GROUP="${GROUP:-pmort}"
+
+depend() {
+  use logger
+}
+
+start() {
+  ebegin "Starting ${name}"
+  checkpath -q -d -o 0755 -o ${USER}:${GROUP} /var/log/pmort
+  start-stop-daemon --start --interpreted \
+    --background --make-pidfile \
+    --user ${USER}:${GROUP} \
+    --pidfile ${pidfile} \
+    --exec ${command} -- ${command_args}
+  eend $?
+}
+
+stop() {
+  ebegin "Stopping ${name}"
+  start-stop-daemon --stop --pidfile ${pidfile}
+  eend $?
+}
