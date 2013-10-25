@@ -1,21 +1,59 @@
-About
------
-
-:Author: Alex Brandt <alunduil@alunduil.com>
-:Date: 2013/10/20
-
 Description
------------
+===========
 
-A simple local post-mortem analysis logger.  Saves pertinent information for
-after-the-fact troubleshooting.
+A simple local post-mortem analysis logging system.  Saves pertinent information
+for after-the-fact troubleshooting.
 
 I would recommend using an actual remote logging and analysis service rather
 than this crude utility but in a pinch this utility may get the information
 needed to find the root of an issue.
 
 Installation
-------------
+============
+
+This package is stored in PyPI and can be installed the standard way:
 
 .. code-block::
-    $python setup.py install
+    pip install pmort
+
+The problem with installing pmort this way is the necessity to create your own
+daemonizer script (RC script).  Package managers should be preferred as they
+will come with the appropriate init system scripts to run this as a daemon.
+
+The latest release available from PyPI is:
+
+.. image:: https://badge.fury.io/py/pmort.png
+    :target: http://badge.fury.io/py/pmort
+
+If you prefer to clone this package directly from git or assist with
+development, the URL is https://github.com/alunduil/pmort and the current status
+of the build is:
+
+.. image:: https://secure.travis-ci.org/alunduil/pmort.png?branch=master
+    :target: http://travis-ci.org/alunduil/pmort
+
+Usage
+=====
+
+Usage of this package is quite simple, run the pmort executable.  To change the
+behaviour of pmort you can check the command line help (--help) or edit the
+sample configuration file (located in ``/usr/share/doc/pmort-VERSION/`` by
+default).
+
+Authors
+=======
+
+* Alex Brandt <alunduil@alunduil.com>
+
+Known Issues
+============
+
+Known issues can be found in the github issue list at
+https://github.com/alunduil/pmort/issues.
+
+Troubleshooting
+===============
+
+If you need to troubleshoot pmort or submit information in a bug report, we
+recommend enabling debug logging and submitting and stack traces you recieve
+while running the pmort executable by hand (without any daemonizer).
