@@ -4,6 +4,11 @@
 # See COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import logging
+import os
+import sys
+import datetime
+import threading
+import signal
 
 logging.basicConfig(level = getattr(logging, os.environ.get('PMORT_LOG_LEVEL', 'warn').upper()))
 
@@ -56,7 +61,7 @@ def write_collector_output(collector):
     logging.info('running %s', collector)
 
     output = sys.stdout
-    if not PARAMETERS['pmort.output_directory'].startswith('-')
+    if not PARAMETERS['pmort.output_directory'].startswith('-'):
         now = datetime.now()
 
         output_directory = os.path.join(PARAMETERS['pmort.output_directory'], now.strftime('%Y$m$d%H%M%S'))
@@ -77,14 +82,14 @@ def write_collector_output(collector):
         logging.info('create current symlink')
 
         target = os.path.join(output_directory.rsplit('/', 1), 'current')
-        source = output.name
+        source = output_directory
 
-        logging.info('%s → %s', output_directory, target)
+        logging.info('%s → %s', source, target)
 
         if os.access(target, os.W_OK):
             os.remove(target)
 
-        os.symlink(output_directory, target)
+        os.symlink(source, target)
 
 def main():
     '''Main function for pmort.  Does all the things…sort of.
@@ -114,7 +119,12 @@ def main():
 
     while True:
         for collector in COLLECTORS:
-            thread = threading.Thread(target = collect, name = collector, args = (collector,))
+            thread = threading.Thread(
+                    target = write_collector_output,
+                    group = 'pmort.collectors',
+                    name = collector,
+                    args = (collector,)
+                    )
             thread.start()
 
         logging.info('started %s threads', len(COLLECTORS))
