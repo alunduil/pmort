@@ -5,10 +5,16 @@
 
 # -----------------------------------------------------------------------------
 import sys
-import configparser
 import traceback
 
-original_sections = sys.modules['configparser'].ConfigParser.sections
+if sys.version_info.major < 3:
+    import ConfigParser
+    configparser_name = 'ConfigParser'
+else:
+    import configparser
+    configparser_name = 'configparser'
+
+original_sections = sys.modules[configparser_name].ConfigParser.sections
 
 def monkey_sections(self):
     '''Return a list of sections available; DEFAULT is not included in the list.
@@ -24,7 +30,7 @@ def monkey_sections(self):
 
     return _
 
-sys.modules['configparser'].ConfigParser.sections = monkey_sections
+sys.modules[configparser_name].ConfigParser.sections = monkey_sections
 # -----------------------------------------------------------------------------
 
 from ez_setup import use_setuptools
