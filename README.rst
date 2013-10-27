@@ -38,7 +38,11 @@ programs to be installed and don't work properly without them.  I've
 categorized them according to Gentoo USE flags here so only the desired groups
 need be installed:
 
-:mysql: mysqltuner,
+:apache:    apache2ctl
+:mysql:     mysqladmin, mysqltuner
+:sysstat:   iostat
+:net-tools: netstat
+:procps     free, ps, uptime, vmstat
 
 Usage
 =====
