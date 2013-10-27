@@ -11,9 +11,7 @@ needed to find the root of an issue.
 Installation
 ============
 
-This package is stored in PyPI and can be installed the standard way:
-
-.. code-block::
+This package is stored in PyPI and can be installed the standard way::
     pip install pmort
 
 The problem with installing pmort this way is the necessity to create your own
@@ -31,6 +29,16 @@ of the build is:
 
 .. image:: https://secure.travis-ci.org/alunduil/pmort.png?branch=master
     :target: http://travis-ci.org/alunduil/pmort
+
+Optional Dependencies
+---------------------
+
+Some of the non-traditional collectors (shell scripts, &c) require other
+programs to be installed and don't work properly without them.  I've
+categorized them according to Gentoo USE flags here so only the desired groups
+need be installed:
+
+:mysql: mysqltuner,
 
 Usage
 =====

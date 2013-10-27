@@ -38,9 +38,9 @@ def write_output(name, output):
 
     output_fh = sys.stdout
     if not PARAMETERS['pmort.output_directory'].startswith('-'):
-        now = datetime.now()
+        now = datetime.datetime.now()
 
-        output_directory = os.path.join(PARAMETERS['pmort.output_directory'], now.strftime('%Y$m$d%H%M%S'))
+        output_directory = os.path.join(PARAMETERS['pmort.output_directory'], now.strftime('%Y%m%d%H%M%S'))
 
         if not os.access(output_directory, os.W_OK):
             os.mkdir(output_directory)
@@ -57,7 +57,7 @@ def write_output(name, output):
 
         logging.info('create current symlink')
 
-        target = os.path.join(output_directory.rsplit('/', 1), 'current')
+        target = os.path.join(output_directory.rsplit('/', 1)[0], 'current')
         source = output_directory
 
         logging.info('%s → %s', source, target)

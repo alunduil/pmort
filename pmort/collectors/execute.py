@@ -7,12 +7,24 @@ import logging
 import os
 import itertools
 import subprocess
+import re
+import copy
 
 from pmort.parameters import PARAMETERS
+from pmort.parameters import CONFIGURATION_DIRECTORY
 from pmort.collectors import COLLECTORS
 from pmort.output import write_output
 
 logger = logging.getLogger(__name__)
+
+PARAMETERS.add_parameter(
+        options = [ '--directory' ],
+        group = 'collector_execute',
+        default = os.path.join(CONFIGURATION_DIRECTORY, 'collectors.d'),
+        help = \
+                'Directory in which to search for non-standard collectors.  ' \
+                'Default: %(default)s'
+        )
 
 def find_scripts(directory = os.path.dirname(__file__)):
     '''Find executable scripts (with shebang) in specified directory.
@@ -36,10 +48,12 @@ def find_scripts(directory = os.path.dirname(__file__)):
 
     '''
 
+    logger.info('finding scripts')
+
     filenames = itertools.chain(*[ [ os.path.join(_[0], filename) for filename in _[2] ] for _ in os.walk(directory) if len(_[2]) ])
 
-    filenames = [ _ for _ in filenames if not _.endswith('.py') ]
-    filenames = [ _ for _ in filenames if os.access(filename, os.X_OK) ]
+    filenames = [ _ for _ in filenames if not re.search('\.py[co]?$', _) ]
+    filenames = [ _ for _ in filenames if os.access(_, os.X_OK) ]
 
     scripts = []
 
@@ -49,6 +63,8 @@ def find_scripts(directory = os.path.dirname(__file__)):
 
             if _.startswith('#!'):
                 scripts.append(_[2:].split() + [ filename ])
+
+    logger.debug('scripts: %s', scripts)
 
     return scripts
 
@@ -77,7 +93,7 @@ def execute_collector():
             continue
 
         _ = ' '.join([ _.rsplit('/', 1)[-1] for _ in script ])
-        write_output(_, output)
+        write_output(_, str(output))
 
     return '\n'.join([
         'ran {0} execute plugins'.format(len(scripts)),
@@ -87,4 +103,5 @@ def execute_collector():
 COLLECTORS['execute'] = execute_collector
 
 if __name__ == '__main__':
+    PARAMETERS.parse()
     print(execute_collector())
