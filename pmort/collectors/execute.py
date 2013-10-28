@@ -8,7 +8,6 @@ import os
 import itertools
 import subprocess
 import re
-import copy
 
 from pmort.parameters import PARAMETERS
 from pmort.parameters import CONFIGURATION_DIRECTORY
