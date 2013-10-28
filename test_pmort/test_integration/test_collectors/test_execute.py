@@ -7,7 +7,6 @@
 
 import logging
 import unittest
-import mock
 import stat
 import os
 import shutil
