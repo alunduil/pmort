@@ -92,7 +92,7 @@ def execute_collector():
             continue
 
         _ = ' '.join([ _.rsplit('/', 1)[-1] for _ in script ])
-        write_output(_, str(output))
+        write_output(_, output.decode('utf-8'))
 
     return '\n'.join([
         'ran {0} execute plugins'.format(len(scripts)),
