@@ -26,6 +26,17 @@ PARAMETERS.add_parameter(
         )
 
 PARAMETERS.add_parameter(
+        options = [ '--minimum-interval', ],
+        group = 'learner',
+        default = 1,
+        type = int,
+        help = \
+                'Set the minimum time between collections by %(prog)s.  This ' \
+                'specifies the minimum number of seconds between ' \
+                'collections.  Default %(default)s'
+        )
+
+PARAMETERS.add_parameter(
         options = [ '--maximum-interval', ],
         group = 'learner',
         default = 600,
