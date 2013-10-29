@@ -60,6 +60,7 @@ class FindScriptsTest(unittest.TestCase):
             os.chmod(file_path, os.stat(file_path)[stat.ST_MODE] | file_content['add_permissions'])
 
         self.expected = [
+                [ '/bin/bash', os.path.join(self.directory, 'found_1.sh'), ]
                 ]
 
     def test_find_scripts(self):
