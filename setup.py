@@ -52,12 +52,19 @@ PARAMS['url'] = information.URL
 PARAMS['license'] = information.LICENSE
 
 PARAMS['classifiers'] = [
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
         'Environment :: No Input/Output (Daemon)',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: System :: Logging',
         ]
 
@@ -86,12 +93,13 @@ PARAMS['entry_points'] = {
 
 PARAMS['packages'] = [
         'pmort',
-        'pmort.plugins',
+        'pmort.collectors',
+        'pmort.learners',
         ]
 
 PARAMS['package_data'] = {
-        'pmort.plugins': [
-            'shell_scripts/*.sh',
+        'pmort.collectors': [
+            '*.sh',
             ],
         }
 
