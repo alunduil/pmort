@@ -22,7 +22,7 @@ depend() {
 
 start() {
   ebegin "Starting ${name}"
-  checkpath -q -d -o 0755 -o ${USER}:${GROUP} /var/log/pmort
+  checkpath -q -d -o 0755 -o ${USER}:${GROUP} {{ PARAMETERS['pmort.output_directory'] }}
   start-stop-daemon --start --interpreted \
     --background --make-pidfile \
     --user ${USER}:${GROUP} \

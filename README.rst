@@ -12,6 +12,7 @@ Installation
 ============
 
 This package is stored in PyPI and can be installed the standard way::
+
     pip install pmort
 
 The problem with installing pmort this way is the necessity to create your own
