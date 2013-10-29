@@ -8,11 +8,8 @@ import mock
 import os
 import functools
 import shutil
-import logging
 
 from pmort.learners.linear import LinearLearner
-
-logger = logging.getLogger(__name__)
 
 class TestLinearLearnedMaximumLoad(unittest.TestCase):
     def setUp(self):
