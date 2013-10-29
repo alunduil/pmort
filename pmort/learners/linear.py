@@ -21,7 +21,7 @@ class LinearLearner(object):
         maximum_load = 0.0
 
         with open(self.cache_file_name, 'r') as max_one_minute_load_fh:
-            maximum_load = float(max_one_minute_load_fh.readline().strip())
+            maximum_load = float(max_one_minute_load_fh.read().strip())
 
         return maximum_load
 
@@ -63,10 +63,10 @@ class LinearLearner(object):
 
         self.learn()
 
-        scale = self.learned_maximum_load / os.getloadavg()[0]
+        scale = - os.getloadavg()[0] / self.learned_maximum_load
 
         logger.debug('linear scale: %s', scale)
 
-        return scale * PARAMETERS['learner.maximum_interval']
+        return max(scale * ( PARAMETERS['learner.maximum_interval'] - PARAMETERS['learner.minimum_interval'] ) + PARAMETERS['learner.maximum_interval'], PARAMETERS['learner.minimum_interval'])
 
 LEARNERS['linear'] = LinearLearner()
