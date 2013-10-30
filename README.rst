@@ -31,6 +31,11 @@ of the build is:
 .. image:: https://secure.travis-ci.org/alunduil/pmort.png?branch=master
     :target: http://travis-ci.org/alunduil/pmort
 
+Installing from source requires more than the standard::
+
+    PYTHONPATH='.' scripts/render_templates conf
+    python setup.py install
+
 Optional Dependencies
 ---------------------
 
