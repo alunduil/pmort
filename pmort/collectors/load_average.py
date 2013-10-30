@@ -1,4 +1,4 @@
-# -*- coding: urf-8 -*-
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2013 by Alex Brandt <alunduil@alunduil.com>
 #
