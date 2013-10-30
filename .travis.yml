@@ -8,5 +8,6 @@ install:
   - "pip install -q -r requirements.txt --use-mirrors"
   - "pip install -q -r test_pmort/requirements.txt --use-mirrors"
 script:
+  - PYTHONPATH='.' scripts/render_templates conf
   - python setup.py install
   - nosetests

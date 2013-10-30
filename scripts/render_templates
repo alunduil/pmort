@@ -7,6 +7,7 @@
 
 import argparse
 import os
+import itertools
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -26,20 +27,23 @@ def grouped_parameters():
 
     return groups
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-            'filepaths',
-            metavar = 'FILE',
-            nargs = '+',
-            help = 'Files to render from templates.'
-            )
-    arguments = parser.parse_args()
+def render_templates(directory):
+    '''Render all found templates in the directory specified.
 
-    for filepath in arguments.filepaths:
-        directory, filename = os.path.split(filepath)
+    Finds all files with a jinja extension and renders them with jinja before
+    placing them in the same location without the jinja extension.
 
-        env = Environment(loader = FileSystemLoader(directory))
+    :``directory``: Directory to search for templates.
+
+    '''
+
+    env = Environment(loader = FileSystemLoader(directory))
+
+    filenames = itertools.chain(*[ [ os.path.join(_[0], filename) for filename in _[2] ] for _ in os.walk(directory) if len(_[2]) ])
+    filenames = [ _.replace(directory + '/', '') for _ in filenames ]
+    filenames = [ _ for _ in filenames if _.endswith('.jinja') ]
+
+    for filename in filenames:
         template = env.get_template(filename)
 
         with open(os.path.join(directory, filename.replace('.jinja', '')), 'w') as fh:
@@ -49,6 +53,18 @@ def main():
                 grouped_parameters = grouped_parameters()
                 ))
             fh.flush()
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+            'directory',
+            metavar = 'DIR',
+            help = 'Directory to search for and render templates'
+            )
+    arguments = parser.parse_args()
+
+    render_templates(arguments.directory)
 
 if __name__ == '__main__':
     main()
